@@ -1,0 +1,36 @@
+{
+  "name": "mediawiki-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for AI-assisted MediaWiki editing with automatic error detection and repair loop",
+  "type": "module",
+  "bin": {
+    "mediawiki-mcp": "./dist/index.js",
+    "mw-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "setup": "tsx src/setup/wizard.ts",
+    "check": "tsx scripts/check-config.ts",
+    "test-tool": "tsx scripts/test-tool.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "consola": "^3.4.0",
+    "diff": "^7.0.0",
+    "playwright": "^1.52.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.0",
+    "zod-to-json-schema": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/diff": "^7.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

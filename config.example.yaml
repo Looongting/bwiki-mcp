@@ -1,0 +1,46 @@
+# MediaWiki MCP Server 配置
+# 复制此文件为 mediawiki-mcp.config.yaml 并填写你的 Wiki 信息
+
+wiki:
+  url: https://wiki.example.com
+  # api: https://wiki.example.com/api.php  # 可选，默认使用 wiki.url/api.php
+
+auth:
+  # 推荐在 https://www.mediawiki.org/wiki/Special:BotPasswords 创建 Bot 密码
+  type: bot
+  username: YourBot@YourBot
+  password: your-bot-password
+
+validation:
+  screenshot: true          # 浏览器验证时是否截图
+  console_errors: true      # 捕获浏览器控制台错误日志
+  network_errors: true      # 捕获失败的 HTTP 请求
+  smw_errors: true          # 检测渲染 HTML 中的语义 MediaWiki 错误
+  wait_after_load: 3000     # 页面加载后等待 JS 执行的毫秒数
+
+  # 控制台日志噪音过滤（正则表达式，匹配的条目会被从验证报告中过滤）
+  console_ignore:
+    - "^Widget:.*版载入$"
+    - "Material Symbols"
+    - "^页面浏览量"
+
+  # 自定义检测规则，用于 Wiki 特定的错误模式
+  # 规则会针对渲染后的 HTML 进行检查
+  custom_rules:
+    - name: my-custom-error
+      selector: .my-error-class
+      severity: error        # error | warning | info
+      # match: "error|fail"  # 可选：规则仅在文本匹配时触发
+
+safety:
+  sandbox_first: false      # 为 true 时所有编辑默认发布到沙箱
+  sandbox_page: "User:${username}/Sandbox"  # ${username} 会被动态替换
+  auto_backup: true         # 编辑前备份页面内容（本地存储）
+  max_edits_per_minute: 10  # 编辑频率安全限制
+
+browser:
+  headless: true            # 无头模式
+  viewport:
+    width: 1280
+    height: 720
+  locale: en                # 浏览器语言
