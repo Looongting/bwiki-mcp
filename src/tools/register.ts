@@ -150,6 +150,21 @@ export function registerTools(server: Server, deps: ToolDependencies): void {
           required: ['page', 'revision'],
         },
       },
+      {
+        name: 'wiki_autofix',
+        description: '自动修复循环：将内容发布到沙箱 → 执行完整验证 → 返回结构化错误报告和修复建议。AI 根据结果修正内容后再次调用此工具，形成修复闭环',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            page: { type: 'string', description: '目标页面标题' },
+            content: { type: 'string', description: '要验证和修复的 Wikitext 内容' },
+            iteration: { type: 'number', description: '当前迭代次数（从 1 开始，默认 1）' },
+            max_iterations: { type: 'number', description: '最大迭代次数（默认 5）' },
+            enable_browser: { type: 'boolean', description: '是否启用浏览器检测（默认 true）' },
+          },
+          required: ['page', 'content'],
+        },
+      },
     ],
   }));
 
@@ -198,6 +213,10 @@ export function registerTools(server: Server, deps: ToolDependencies): void {
         case 'wiki_revert': {
           const { revert } = await import('./revert-tool.js');
           return await revert(deps, args as any);
+        }
+        case 'wiki_autofix': {
+          const { autofix } = await import('./autofix-tool.js');
+          return await autofix(deps, args as any);
         }
         default:
           throw new Error(`未知工具: ${name}`);

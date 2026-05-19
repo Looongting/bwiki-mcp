@@ -233,16 +233,36 @@ src/
 - 未渲染的 Wikitext（`{{...}}` 模式）
 - 语义 MediaWiki 查询语法错误
 
-### 噪音过滤
+### 控制台噪音过滤
 
-已知的平台噪音模式（BiliWiki 小工具、统计分析等）会自动从控制台日志中过滤。可通过配置添加自定义模式：
+不同 Wiki 站点有大量自带插件、统计脚本和小工具，它们的控制台输出是**正常噪音**，并非页面渲染错误。
+若不过滤，这些噪音会淹没真正的错误信息，影响 AI 判断。
+
+**内置已过滤的模式**（30+ 条正则）涵盖常见平台噪音：
+```
+BLoader / BwikiTune              平台基础库加载日志
+bili-mirror / bili-fe-mirror     B站镜像
+getData(dbUserName)              用户配置未初始化
+GAME_PB_INS / game-report        游戏数据上报
+Report PV / 页面浏览量            PV 统计
+jquery 事件触发 / DOMContentLoaded  页面生命周期
+Widget:*版载入                   小工具加载
+VSCode Button extension          编辑按钮扩展
+...
+```
+完整列表见 `src/validation/detect.ts` 中的 `NOISE_PATTERNS` 数组。
+
+**你也可以添加 Wiki 专属过滤规则**，在配置文件中写入正则表达式：
 
 ```yaml
 validation:
   console_ignore:
-    - "^MyExtension.*log$"
-    - "SomeNoise"
+    - "^MyExtension.*log$"       # 匹配以 "MyExtension" 开头的日志
+    - "SomeNoise"                 # 匹配包含 "SomeNoise" 的条目
+    - "特定插件名"                 # 你的站点特有的日志
 ```
+
+> **提示：** 如果你发现某个控制台日志总是出现且与页面错误无关，把它加到 `console_ignore` 列表中，AI 在验证时就会自动忽略它，让报告更干净。
 
 ## 配置参考
 
