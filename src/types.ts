@@ -9,7 +9,12 @@ export interface WikiConfig {
 export type AuthConfig =
   | { type: 'bot'; username: string; password: string }
   | { type: 'oauth'; consumer_key: string; consumer_secret: string; access_token: string; access_secret: string }
-  | { type: 'cookie'; cookie_file: string };
+  | { type: 'cookie'; cookie_file: string }
+  | { type: 'none' };
+
+export interface SiteConfig extends WikiConfig {
+  auth: AuthConfig;
+}
 
 export interface ValidationConfig {
   screenshot: boolean;
@@ -43,8 +48,8 @@ export interface BrowserConfig {
 }
 
 export interface AppConfig {
-  wiki: WikiConfig;
-  auth: AuthConfig;
+  default_site: string;
+  sites: Record<string, SiteConfig>;
   validation: ValidationConfig;
   safety: SafetyConfig;
   browser: BrowserConfig;
@@ -152,6 +157,7 @@ export interface BrowserCaptureResult {
 export interface ReadInput {
   page: string;
   section?: number;
+  site?: string;
 }
 
 export interface EditInput {
@@ -162,12 +168,14 @@ export interface EditInput {
   bot?: boolean;
   dry_run?: boolean;
   sandbox?: boolean;
+  site?: string;
 }
 
 export interface ParseInput {
   page?: string;
   text?: string;
   mobile?: boolean;
+  site?: string;
 }
 
 export interface ValidateInput {
@@ -176,12 +184,14 @@ export interface ValidateInput {
   screenshot?: boolean;
   browser?: boolean;
   rules?: string[];
+  site?: string;
 }
 
 export interface SmwQueryInput {
   query: string;
   format?: string;
   limit?: number;
+  site?: string;
 }
 
 export interface BrowserCaptureInput {
@@ -189,27 +199,32 @@ export interface BrowserCaptureInput {
   wait_ms?: number;
   screenshot?: boolean;
   full_page?: boolean;
+  site?: string;
 }
 
 export interface DiffInput {
   page: string;
   from_revision?: number;
   to_content?: string;
+  site?: string;
 }
 
 export interface HistoryInput {
   page: string;
   limit?: number;
+  site?: string;
 }
 
 export interface RevertInput {
   page: string;
   revision: number;
   summary?: string;
+  site?: string;
 }
 
 export interface SearchInput {
   query: string;
   limit?: number;
   namespace?: number;
+  site?: string;
 }

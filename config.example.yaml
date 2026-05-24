@@ -1,15 +1,17 @@
 # MediaWiki MCP Server 配置
 # 复制此文件为 mediawiki-mcp.config.yaml 并填写你的 Wiki 信息
 
-wiki:
-  url: https://wiki.example.com
-  # api: https://wiki.example.com/api.php  # 可选，默认使用 wiki.url/api.php
+default_site: mysite
+sites:
+  mysite:
+    url: https://wiki.example.com
+    # api: https://wiki.example.com/api.php  # 可选，默认使用 wiki.url/api.php
 
-auth:
-  # 推荐在 https://www.mediawiki.org/wiki/Special:BotPasswords 创建 Bot 密码
-  type: bot
-  username: YourBot@YourBot
-  password: your-bot-password
+    auth:
+      # 推荐在 https://www.mediawiki.org/wiki/Special:BotPasswords 创建 Bot 密码
+      type: bot
+      username: YourBot@YourBot
+      password: your-bot-password
 
 validation:
   screenshot: true          # 浏览器验证时是否截图

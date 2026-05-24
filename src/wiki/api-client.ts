@@ -1,4 +1,4 @@
-import type { AppConfig, PageInfo, ParseResult, EditResult, SearchResult, RevisionEntry } from '../types.js';
+import type { SiteConfig, PageInfo, ParseResult, EditResult, SearchResult, RevisionEntry } from '../types.js';
 import { AuthManager } from './auth.js';
 import { ApiError } from '../utils/errors.js';
 import { fetchWithRetry } from '../utils/network.js';
@@ -6,13 +6,14 @@ import { logger } from '../utils/logger.js';
 
 export class WikiClient {
   private auth: AuthManager;
+  private authRetried = false;
 
-  constructor(private config: AppConfig) {
-    this.auth = new AuthManager({ wiki: config.wiki, auth: config.auth });
+  constructor(private config: SiteConfig) {
+    this.auth = new AuthManager(config);
   }
 
   get apiUrl(): string {
-    return this.config.wiki.api;
+    return this.config.api;
   }
 
   get authManager(): AuthManager {
@@ -44,12 +45,25 @@ export class WikiClient {
     });
 
     const data = await resp.json() as any;
+
+    if (data.error) {
+      if (!this.authRetried) {
+        this.authRetried = true;
+        logger.warn(`Read failed (${data.error.code}), trying full re-authentication...`);
+        await this.auth.reauthenticate();
+        return this.readPage(page);
+      }
+      throw new ApiError(`Read failed: ${data.error.info}`, data.error.code);
+    }
+
     const pageData = data?.query?.pages?.[0];
 
     if (!pageData || pageData.missing) {
+      this.authRetried = false;
       return { title: page, content: '', exists: false, last_revision: 0 };
     }
 
+    this.authRetried = false;
     return {
       title: pageData.title,
       content: pageData.revisions?.[0]?.content || '',
@@ -80,9 +94,16 @@ export class WikiClient {
     const data = await resp.json() as any;
 
     if (data.error) {
+      if (!this.authRetried) {
+        this.authRetried = true;
+        logger.warn(`Parse failed (${data.error.code}), trying full re-authentication...`);
+        await this.auth.reauthenticate();
+        return this.parseWikitext(page, text);
+      }
       throw new ApiError(`Parse error: ${data.error.info}`);
     }
 
+    this.authRetried = false;
     const parse = data.parse;
 
     // Extract errors from rendered HTML
@@ -125,15 +146,25 @@ export class WikiClient {
     const data = await resp.json() as any;
 
     if (data.error) {
-      // Token might be expired, try re-authenticating once
       if (data.error.code === 'badtoken') {
-        logger.warn('CSRF token expired, re-authenticating...');
+        // CSRF token expired — refresh and retry once
+        logger.warn('CSRF token expired, refreshing...');
         await this.auth.refreshCsrfToken();
+        this.authRetried = false;
+        return this.editPage(page, content, options);
+      }
+      // Session might have fully expired (permissiondenied etc.)
+      // Try full re-authentication once before giving up
+      if (!this.authRetried) {
+        this.authRetried = true;
+        logger.warn(`Edit failed (${data.error.code}), trying full re-authentication...`);
+        await this.auth.reauthenticate();
         return this.editPage(page, content, options);
       }
       throw new ApiError(`Edit failed: ${data.error.info}`, data.error.code);
     }
 
+    this.authRetried = false;
     return {
       success: data.edit?.result === 'Success',
       revision: data.edit?.newrevid,

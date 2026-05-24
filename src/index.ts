@@ -3,7 +3,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadConfig } from './config.js';
-import { WikiClient } from './wiki/api-client.js';
+import { WikiClientManager } from './wiki/client-manager.js';
 import { BrowserManager } from './browser/manager.js';
 import { registerTools } from './tools/register.js';
 import { registerResources } from './resources/register.js';
@@ -12,7 +12,7 @@ import { logger } from './utils/logger.js';
 async function main() {
   const config = await loadConfig();
 
-  const wikiClient = new WikiClient(config);
+  const wikiClientManager = new WikiClientManager(config);
   const browserManager = new BrowserManager(config.browser);
 
   const server = new Server(
@@ -28,8 +28,8 @@ async function main() {
     }
   );
 
-  registerTools(server, { wikiClient, browserManager, config });
-  registerResources(server, wikiClient);
+  registerTools(server, { wikiClientManager, browserManager, config });
+  registerResources(server, wikiClientManager);
 
   // Error handling
   server.onerror = (err) => {

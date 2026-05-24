@@ -2,5 +2,6 @@ node_modules/
 dist/
 .wiki-backups/
 .env
+.env copy
 *.log
 .DS_Store

@@ -1,7 +1,7 @@
 import type { ToolDependencies } from './register.js';
 
-export async function search(deps: ToolDependencies, args: { query: string; limit?: number; namespace?: number }) {
-  const { wikiClient } = deps;
+export async function search(deps: ToolDependencies, args: { query: string; limit?: number; namespace?: number; site?: string }) {
+  const wikiClient = deps.wikiClientManager.getClient(args.site);
   const results = await wikiClient.searchPages(args.query, args.limit, args.namespace);
 
   if (results.length === 0) {

@@ -12,15 +12,18 @@ export async function edit(deps: ToolDependencies, args: {
   bot?: boolean;
   dry_run?: boolean;
   sandbox?: boolean;
+  site?: string;
 }) {
-  const { wikiClient, config } = deps;
+  const { wikiClientManager, config } = deps;
+  const wikiClient = wikiClientManager.getClient(args.site);
+  const siteConfig = wikiClientManager.getSiteConfig(args.site);
 
   // Resolve sandbox
   let targetPage = args.page;
   const shouldSandbox = args.sandbox ?? config.safety.sandbox_first;
 
   if (shouldSandbox) {
-    const username = config.auth.type === 'bot' ? config.auth.username : 'user';
+    const username = siteConfig.auth.type === 'bot' ? siteConfig.auth.username : 'user';
     const sandbox = new SandboxManager(config.safety.sandbox_page, username.replace(/@.*$/, ''));
     targetPage = sandbox.getSandboxPage(args.page);
   }

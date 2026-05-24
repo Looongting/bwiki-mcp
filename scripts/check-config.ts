@@ -7,7 +7,7 @@
  */
 
 import { loadConfig } from '../src/config.js';
-import { WikiClient } from '../src/wiki/api-client.js';
+import { WikiClientManager } from '../src/wiki/client-manager.js';
 
 async function main() {
   console.log('=== MediaWiki MCP - 配置检查 ===\n');
@@ -15,40 +15,52 @@ async function main() {
   // 第一步：加载配置
   console.log('1️⃣  加载配置...');
   const config = await loadConfig();
-  console.log(`   ✅ Wiki URL: ${config.wiki.url}`);
-  console.log(`   ✅ API URL: ${config.wiki.api}`);
-  console.log(`   ✅ 认证方式: ${config.auth.type}`);
+  const siteNames = Object.keys(config.sites);
+  console.log(`   ✅ 默认站点: ${config.default_site}`);
+  console.log(`   ✅ 已配置站点: ${siteNames.join(', ')}`);
 
-  // 第二步：测试 API 连通性
-  console.log('\n2️⃣  测试 API 连通性...');
-  try {
-    const resp = await fetch(`${config.wiki.api}?action=query&meta=siteinfo&format=json`, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'MediaWiki-MCP-Check/1.0',
-      },
-    });
-    const data = await resp.json() as any;
-    if (data?.query?.general?.sitename) {
-      console.log(`   ✅ 已连接: ${data.query.general.sitename}`);
-      console.log(`   ✅ MW 版本: ${data.query.general.generator || '未知'}`);
-    } else {
-      console.log('   ⚠️  API 响应正常但无法解析站点信息');
+  const manager = new WikiClientManager(config);
+
+  // 对每个站点进行测试
+  for (const name of siteNames) {
+    const siteConfig = config.sites[name];
+    console.log(`\n──────────────────────`);
+    console.log(`📍 站点: ${name}`);
+    console.log(`   URL: ${siteConfig.url}`);
+    console.log(`   API: ${siteConfig.api}`);
+    console.log(`   认证: ${siteConfig.auth.type}`);
+
+    // 第二步：测试 API 连通性
+    console.log('\n2️⃣  测试 API 连通性...');
+    try {
+      const resp = await fetch(`${siteConfig.api}?action=query&meta=siteinfo&format=json`, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'MediaWiki-MCP-Check/1.0',
+        },
+      });
+      const data = await resp.json() as any;
+      if (data?.query?.general?.sitename) {
+        console.log(`   ✅ 已连接: ${data.query.general.sitename}`);
+        console.log(`   ✅ MW 版本: ${data.query.general.generator || '未知'}`);
+      } else {
+        console.log('   ⚠️  API 响应正常但无法解析站点信息');
+      }
+    } catch (err) {
+      console.error(`   ❌ API 连接失败: ${(err as Error).message}`);
+      process.exit(1);
     }
-  } catch (err) {
-    console.error(`   ❌ API 连接失败: ${(err as Error).message}`);
-    process.exit(1);
-  }
 
-  // 第三步：测试认证
-  console.log('\n3️⃣  测试认证...');
-  try {
-    const client = new WikiClient(config);
-    await client.ensureAuthenticated();
-    console.log('   ✅ 认证成功');
-  } catch (err) {
-    console.error(`   ❌ 认证失败: ${(err as Error).message}`);
-    process.exit(1);
+    // 第三步：测试认证
+    console.log('\n3️⃣  测试认证...');
+    try {
+      const client = manager.getClient(name);
+      await client.ensureAuthenticated();
+      console.log('   ✅ 认证成功');
+    } catch (err) {
+      console.error(`   ❌ 认证失败: ${(err as Error).message}`);
+      process.exit(1);
+    }
   }
 
   // 第四步：检查 Playwright

@@ -71,6 +71,10 @@ export class BrowserManager {
     });
 
     try {
+      // Clear cookies before navigation to prevent cross-site cookie leakage
+      // (biligame wikis share the wiki.biligame.com domain)
+      await this.context.clearCookies();
+
       await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
       await page.waitForTimeout(options.waitMs ?? 3000);
     } catch (err) {

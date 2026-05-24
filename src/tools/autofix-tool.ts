@@ -12,10 +12,13 @@ interface AutofixInput {
   iteration?: number;
   max_iterations?: number;
   enable_browser?: boolean;
+  site?: string;
 }
 
 export async function autofix(deps: ToolDependencies, args: AutofixInput) {
-  const { wikiClient, browserManager, config } = deps;
+  const { wikiClientManager, browserManager, config } = deps;
+  const wikiClient = wikiClientManager.getClient(args.site);
+  const siteConfig = wikiClientManager.getSiteConfig(args.site);
   const iteration = args.iteration ?? 1;
   const maxIterations = args.max_iterations ?? 5;
   const useBrowser = args.enable_browser !== false && config.validation.console_errors;
@@ -31,7 +34,7 @@ export async function autofix(deps: ToolDependencies, args: AutofixInput) {
   }
 
   // Resolve sandbox page
-  const username = config.auth.type === 'bot' ? config.auth.username : 'user';
+  const username = siteConfig.auth.type === 'bot' ? siteConfig.auth.username : 'user';
   const sandbox = new SandboxManager(config.safety.sandbox_page, username.replace(/@.*$/, ''));
   const sandboxPage = sandbox.getSandboxPage(args.page);
 
@@ -86,7 +89,7 @@ export async function autofix(deps: ToolDependencies, args: AutofixInput) {
 
   if (useBrowser) {
     try {
-      const pageUrl = `${config.wiki.url}/index.php?title=${encodeURIComponent(sandboxPage)}`;
+      const pageUrl = `${siteConfig.url}/index.php?title=${encodeURIComponent(sandboxPage)}`;
       const captureResult = await browserManager.capturePage(pageUrl, {
         screenshot: config.validation.screenshot,
         waitMs: config.validation.wait_after_load,

@@ -1,8 +1,8 @@
 import type { ToolDependencies } from './register.js';
 import { executeSmwQuery } from '../wiki/smw.js';
 
-export async function smwQuery(deps: ToolDependencies, args: { query: string; format?: string; limit?: number }) {
-  const { wikiClient } = deps;
+export async function smwQuery(deps: ToolDependencies, args: { query: string; format?: string; limit?: number; site?: string }) {
+  const wikiClient = deps.wikiClientManager.getClient(args.site);
   const result = await executeSmwQuery(wikiClient, args.query, args.format, args.limit);
 
   const parts: string[] = [

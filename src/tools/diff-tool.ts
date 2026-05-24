@@ -1,8 +1,8 @@
 import type { ToolDependencies } from './register.js';
 import { generateDiff } from '../safety/diff.js';
 
-export async function diff(deps: ToolDependencies, args: { page: string; from_revision?: number; to_content?: string }) {
-  const { wikiClient } = deps;
+export async function diff(deps: ToolDependencies, args: { page: string; from_revision?: number; to_content?: string; site?: string }) {
+  const wikiClient = deps.wikiClientManager.getClient(args.site);
 
   // Read current content
   const current = await wikiClient.readPage(args.page);

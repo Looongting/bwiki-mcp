@@ -6,13 +6,15 @@ export async function capture(deps: ToolDependencies, args: {
   wait_ms?: number;
   screenshot?: boolean;
   full_page?: boolean;
+  site?: string;
 }) {
-  const { browserManager, config } = deps;
+  const { browserManager, wikiClientManager } = deps;
+  const siteUrl = wikiClientManager.getSiteConfig(args.site).url;
 
   // Construct full URL if a page title was given, not a full URL
   const url = args.page.startsWith('http')
     ? args.page
-    : `${config.wiki.url}/index.php?title=${encodeURIComponent(args.page)}`;
+    : `${siteUrl}/index.php?title=${encodeURIComponent(args.page)}`;
 
   logger.info(`Browser capture: ${url}`);
 

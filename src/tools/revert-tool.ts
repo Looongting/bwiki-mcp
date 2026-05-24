@@ -1,7 +1,7 @@
 import type { ToolDependencies } from './register.js';
 
-export async function revert(deps: ToolDependencies, args: { page: string; revision: number; summary?: string }) {
-  const { wikiClient } = deps;
+export async function revert(deps: ToolDependencies, args: { page: string; revision: number; summary?: string; site?: string }) {
+  const wikiClient = deps.wikiClientManager.getClient(args.site);
 
   const result = await wikiClient.revertPage(args.page, args.revision, args.summary);
 

@@ -1,7 +1,7 @@
 import type { ToolDependencies } from './register.js';
 
-export async function history(deps: ToolDependencies, args: { page: string; limit?: number }) {
-  const { wikiClient } = deps;
+export async function history(deps: ToolDependencies, args: { page: string; limit?: number; site?: string }) {
+  const wikiClient = deps.wikiClientManager.getClient(args.site);
   const entries = await wikiClient.getHistory(args.page, args.limit);
 
   if (entries.length === 0) {
