@@ -1,6 +1,6 @@
 # BWIKI-MCP
 
-[![GitHub](https://img.shields.io/badge/GitHub-Looongting/mediawiki--mcp-blue?logo=github)](https://github.com/Looongting/mediawiki-mcp)
+[![GitHub](https://img.shields.io/badge/GitHub-Looongting/mediawiki--mcp-blue?logo=github)](https://github.com/Looongting/bwiki-mcp)
 [![npm](https://img.shields.io/npm/v/bwiki-mcp?logo=npm)](https://www.npmjs.com/package/bwiki-mcp)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -28,8 +28,8 @@
 #### 从 GitHub 安装（推荐）
 
 ```bash
-git clone https://github.com/Looongting/mediawiki-mcp.git
-cd mediawiki-mcp
+git clone https://github.com/Looongting/bwiki-mcp.git
+cd bwiki-mcp
 npm install
 npm run build
 ```
@@ -97,7 +97,7 @@ npm run setup
   "mcpServers": {
     "mediawiki": {
       "command": "node",
-      "args": ["path/to/mediawiki-mcp/dist/index.js"]
+      "args": ["path/to/bwiki-mcp/dist/index.js"]
     }
   }
 }
@@ -359,7 +359,7 @@ npx vitest run --coverage
 
 ## 分享给他人
 
-本项目托管在 GitHub：[Looongting/mediawiki-mcp](https://github.com/Looongting/mediawiki-mcp)，npm 包名为 [bwiki-mcp](https://www.npmjs.com/package/bwiki-mcp)。
+本项目托管在 GitHub：[Looongting/bwiki-mcp](https://github.com/Looongting/bwiki-mcp)，npm 包名为 [bwiki-mcp](https://www.npmjs.com/package/bwiki-mcp)。
 
 其他人使用只需三步：
 
@@ -370,8 +370,8 @@ npm install -g bwiki-mcp
 或从 GitHub 克隆：
 
 ```bash
-git clone https://github.com/Looongting/mediawiki-mcp.git
-cd mediawiki-mcp
+git clone https://github.com/Looongting/bwiki-mcp.git
+cd bwiki-mcp
 npm install && npm run build
 ```
 
