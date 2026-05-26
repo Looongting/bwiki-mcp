@@ -1,5 +1,5 @@
 {
-  "name": "mediawiki-mcp",
+  "name": "bwiki-mcp",
   "version": "0.1.0",
   "description": "MCP server for AI-assisted MediaWiki editing with automatic error detection and repair loop",
   "type": "module",
@@ -9,8 +9,8 @@
     "LICENSE"
   ],
   "bin": {
-    "mediawiki-mcp": "./dist/index.js",
-    "mw-mcp": "./dist/index.js"
+    "bwiki-mcp": "dist/index.js",
+    "mw-mcp": "dist/index.js"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",

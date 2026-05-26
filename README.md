@@ -1,9 +1,10 @@
-# MediaWiki MCP Server
+# BWIKI-MCP
 
 [![GitHub](https://img.shields.io/badge/GitHub-Looongting/mediawiki--mcp-blue?logo=github)](https://github.com/Looongting/mediawiki-mcp)
+[![npm](https://img.shields.io/npm/v/bwiki-mcp?logo=npm)](https://www.npmjs.com/package/bwiki-mcp)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-将 AI 辅助编程（Claude Code）与 MediaWiki 编辑连接起来的 MCP 服务器，实现页面自动读写、服务端渲染验证、浏览器级错误检测和 AI 自动修复闭环。
+将 AI 辅助编程（Claude Code）与 MediaWiki 编辑连接起来的 MCP 服务器，实现页面自动读写、服务端渲染验证、浏览器级错误检测和 AI 自动修复闭环。（原名 MediaWiki-MCP）
 
 ## 功能特性
 
@@ -35,11 +36,9 @@ npm run build
 
 #### 从 npm 安装
 
-> 尚未发布到 npm，待发布后可通过以下命令安装：
->
-> ```bash
-> npm install -g mediawiki-mcp
-> ```
+```bash
+npm install -g bwiki-mcp
+```
 
 ### 配置方式
 
@@ -78,7 +77,20 @@ npm run setup
 
 ### 添加到 MCP 客户端
 
-在 MCP 客户端配置（如 `claude_desktop_config.json` 或 `.claude/settings.json`）中指向项目目录：
+全局安装后，在 MCP 客户端配置中直接使用 `bwiki-mcp` 命令：
+
+```json
+{
+  "mcpServers": {
+    "mediawiki": {
+      "command": "bwiki-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+如果从 GitHub 克隆运行，则指向项目目录：
 
 ```json
 {
@@ -91,7 +103,7 @@ npm run setup
 }
 ```
 
-服务器启动时会自动读取项目根目录下的 `mediawiki-mcp.config.yaml`。如果使用全局安装（`mediawiki-mcp` 命令），可将 `command` 改为 `"mediawiki-mcp"`，去掉 `args`。详见 [config.example.yaml](config.example.yaml)。
+服务器启动时会自动读取项目根目录下的 `mediawiki-mcp.config.yaml`。详见 [config.example.yaml](config.example.yaml)。
 
 ## 可用工具
 
@@ -347,9 +359,15 @@ npx vitest run --coverage
 
 ## 分享给他人
 
-本项目托管在 GitHub：[Looongting/mediawiki-mcp](https://github.com/Looongting/mediawiki-mcp)
+本项目托管在 GitHub：[Looongting/mediawiki-mcp](https://github.com/Looongting/mediawiki-mcp)，npm 包名为 [bwiki-mcp](https://www.npmjs.com/package/bwiki-mcp)。
 
 其他人使用只需三步：
+
+```bash
+npm install -g bwiki-mcp
+```
+
+或从 GitHub 克隆：
 
 ```bash
 git clone https://github.com/Looongting/mediawiki-mcp.git
