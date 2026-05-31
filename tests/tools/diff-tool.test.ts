@@ -1,20 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { diff } from '../../src/tools/diff-tool.js';
-
-function mockDeps(overrides: any = {}) {
-  return {
-    wikiClient: {
-      readPage: vi.fn().mockResolvedValue({ title: 'Test', content: 'old content', exists: true, last_revision: 5 }),
-      getHistory: vi.fn().mockResolvedValue([
-        { revision: 5, timestamp: '2024-01-01T00:00:00Z', user: 'User1', comment: 'edit', minor: false },
-        { revision: 4, timestamp: '2024-01-01T00:00:00Z', user: 'User1', comment: 'edit', minor: false },
-      ]),
-      ...overrides.wikiClient,
-    },
-    browserManager: overrides.browserManager ?? {},
-    config: overrides.config ?? {},
-  };
-}
+import { mockDeps } from '../helpers.js';
 
 describe('wiki_diff 工具', () => {
   it('应显示差异行数统计', async () => {

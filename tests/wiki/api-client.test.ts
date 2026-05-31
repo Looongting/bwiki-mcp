@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { SiteConfig } from '../../src/types.js';
 
 // 在模块级别定义 mock，以便 vi.mock factory 可以访问
 const mockAuth = {
@@ -25,8 +26,9 @@ import { WikiClient } from '../../src/wiki/api-client.js';
 import { fetchWithRetry } from '../../src/utils/network.js';
 
 describe('WikiClient', () => {
-  const mockConfig: any = {
-    wiki: { url: 'https://wiki.example.com', api: 'https://wiki.example.com/api.php' },
+  const mockConfig: SiteConfig = {
+    url: 'https://wiki.example.com',
+    api: 'https://wiki.example.com/api.php',
     auth: { type: 'bot', username: 'TestBot', password: 'testpass' },
   };
 

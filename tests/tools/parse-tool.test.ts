@@ -1,25 +1,19 @@
 import { describe, it, expect, vi } from 'vitest';
 import { parse } from '../../src/tools/parse-tool.js';
-
-function mockDeps(overrides: any = {}) {
-  return {
-    wikiClient: {
-      parseWikitext: vi.fn().mockResolvedValue({
-        html: '<p>rendered content</p>',
-        categories: ['Category:Test'],
-        modules: ['ext.smw'],
-        errors: [],
-      }),
-      ...overrides.wikiClient,
-    },
-    browserManager: overrides.browserManager ?? {},
-    config: overrides.config ?? {},
-  };
-}
+import { mockDeps } from '../helpers.js';
 
 describe('wiki_parse 工具', () => {
   it('应返回解析结果中的分类和模块信息', async () => {
-    const deps = mockDeps();
+    const deps = mockDeps({
+      wikiClient: {
+        parseWikitext: vi.fn().mockResolvedValue({
+          html: '<p>rendered content</p>',
+          categories: ['Category:Test'],
+          modules: ['ext.smw'],
+          errors: [],
+        }),
+      },
+    });
     const result = await parse(deps, { page: 'TestPage' });
 
     const text = result.content[0].text;

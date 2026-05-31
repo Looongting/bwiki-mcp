@@ -1,36 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { validate } from '../../src/tools/validate-tool.js';
-import type { AppConfig } from '../../src/types.js';
-
-const defaultConfig: AppConfig = {
-  wiki: { url: 'https://wiki.example.com', api: 'https://wiki.example.com/api.php' },
-  auth: { type: 'bot', username: 'Bot', password: 'pwd' },
-  validation: { screenshot: true, console_errors: true, network_errors: true, smw_errors: true, wait_after_load: 1000, custom_rules: [], console_ignore: [] },
-  safety: { sandbox_first: true, sandbox_page: 'User:${username}/Sandbox', auto_backup: false, max_edits_per_minute: 10 },
-  browser: { headless: true, viewport: { width: 1280, height: 720 }, locale: 'en' },
-};
-
-function mockDeps(overrides: any = {}) {
-  return {
-    wikiClient: {
-      parseWikitext: vi.fn().mockResolvedValue({ html: '<p>ok</p>', categories: [], modules: [], errors: [] }),
-      ensureAuthenticated: vi.fn().mockResolvedValue(undefined),
-      ...overrides.wikiClient,
-    },
-    browserManager: {
-      capturePage: vi.fn().mockResolvedValue({
-        url: 'https://wiki.example.com/index.php/Test',
-        console_entries: [],
-        network_entries: [],
-        page_errors: [],
-        screenshot: undefined,
-        dom_snapshot: '<div>rendered</div>',
-      }),
-      ...overrides.browserManager,
-    },
-    config: { ...defaultConfig, ...overrides.config },
-  };
-}
+import { mockDeps } from '../helpers.js';
 
 describe('wiki_validate 工具', () => {
   it('页面验证通过时应返回摘要', async () => {
@@ -47,7 +17,8 @@ describe('wiki_validate 工具', () => {
     const result = await validate(deps, { text: '{{Test}}' });
 
     expect(result.content[0].text).toContain('验证摘要');
-    expect(deps.wikiClient.parseWikitext).toHaveBeenCalledWith(undefined, '{{Test}}');
+    const mc = deps.wikiClientManager.getClient();
+    expect(mc.parseWikitext).toHaveBeenCalledWith(undefined, '{{Test}}');
   });
 
   it('缺参数时应返回错误', async () => {

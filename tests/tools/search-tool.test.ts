@@ -1,14 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { search } from '../../src/tools/search-tool.js';
-
-const mockDeps = (overrides: any = {}) => ({
-  wikiClient: {
-    searchPages: vi.fn(),
-    ...overrides.wikiClient,
-  },
-  browserManager: overrides.browserManager ?? {},
-  config: overrides.config ?? {},
-});
+import { mockDeps } from '../helpers.js';
 
 describe('search 工具', () => {
   it('应格式化搜索结果', async () => {

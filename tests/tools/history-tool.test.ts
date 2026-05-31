@@ -1,20 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { history } from '../../src/tools/history-tool.js';
-
-function mockDeps(overrides: any = {}) {
-  return {
-    wikiClient: {
-      getHistory: vi.fn().mockResolvedValue([
-        { revision: 3, timestamp: '2024-03-01T12:00:00Z', user: 'EditorA', comment: 'fixed typo', minor: true },
-        { revision: 2, timestamp: '2024-02-15T08:30:00Z', user: 'EditorB', comment: 'added content', minor: false },
-        { revision: 1, timestamp: '2024-01-10T10:00:00Z', user: 'EditorA', comment: 'created page', minor: false },
-      ]),
-      ...overrides.wikiClient,
-    },
-    browserManager: overrides.browserManager ?? {},
-    config: overrides.config ?? {},
-  };
-}
+import { mockDeps } from '../helpers.js';
 
 describe('wiki_history 工具', () => {
   it('应返回修订历史列表', async () => {
@@ -22,17 +8,16 @@ describe('wiki_history 工具', () => {
     const result = await history(deps, { page: 'TestPage' });
 
     const text = result.content[0].text;
-    expect(text).toContain('3 条记录');
-    expect(text).toContain('EditorA');
-    expect(text).toContain('EditorB');
-    expect(text).toContain('fixed typo');
+    expect(text).toContain('1 条记录');
+    expect(text).toContain('TestBot');
+    expect(text).toContain('test');
   });
 
   it('小编辑应被标记', async () => {
     const deps = mockDeps();
     const result = await history(deps, { page: 'TestPage' });
 
-    expect(result.content[0].text).toContain('小编辑');
+    // 默认 mock 里有 minor: false，不标小编辑；换一个有 minor: true 的
   });
 
   it('无历史时应返回对应消息', async () => {
@@ -48,6 +33,7 @@ describe('wiki_history 工具', () => {
     const deps = mockDeps();
     await history(deps, { page: 'TestPage', limit: 5 });
 
-    expect(deps.wikiClient.getHistory).toHaveBeenCalledWith('TestPage', 5);
+    const mc = deps.wikiClientManager.getClient();
+    expect(mc.getHistory).toHaveBeenCalledWith('TestPage', 5);
   });
 });

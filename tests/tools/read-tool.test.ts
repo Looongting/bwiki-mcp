@@ -1,14 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { read } from '../../src/tools/read-tool.js';
-
-const mockDeps = (overrides: any = {}) => ({
-  wikiClient: {
-    readPage: vi.fn(),
-    ...overrides.wikiClient,
-  },
-  browserManager: overrides.browserManager ?? {},
-  config: overrides.config ?? {},
-});
+import { mockDeps } from '../helpers.js';
 
 describe('read 工具', () => {
   it('页面存在时应返回内容', async () => {

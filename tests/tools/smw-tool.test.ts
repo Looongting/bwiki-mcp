@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { smwQuery } from '../../src/tools/smw-tool.js';
+import { mockDeps } from '../helpers.js';
 
 vi.mock('../../src/wiki/smw.js', () => ({
   executeSmwQuery: vi.fn((_client, query, format, limit) => {
@@ -27,19 +28,6 @@ vi.mock('../../src/wiki/smw.js', () => ({
     });
   }),
 }));
-
-function mockDeps(overrides: any = {}) {
-  return {
-    wikiClient: {
-      apiUrl: 'https://wiki.example.com/api.php',
-      authManager: { cookieHeader: 'cookie=val' },
-      ensureAuthenticated: vi.fn(),
-      ...overrides.wikiClient,
-    },
-    browserManager: overrides.browserManager ?? {},
-    config: overrides.config ?? {},
-  };
-}
 
 describe('wiki_smw_query 工具', () => {
   it('查询成功应返回结果列表', async () => {
