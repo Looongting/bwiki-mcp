@@ -51,19 +51,22 @@ npm install -g bwiki-mcp
 
 ```yaml
 default_site: mywiki
+auth_mode: bot
+
+# 所有站点共用的 cookie 凭证（auth_mode 为 cookie 时使用）
+cookie:
+  cookies: 'SESSDATA=xxx'
 
 sites:
   mywiki:
     url: https://wiki.example.com
-    auth:
-      type: bot
+    bot:
       username: YourBot@YourBot
       password: your-bot-password
 
   another:
     url: https://another.wiki.com
-    auth:
-      type: bot
+    bot:
       username: AnotherBot@AnotherBot
       password: another-bot-password
 
@@ -300,13 +303,16 @@ validation:
 
 ```yaml
 default_site: mywiki                      # 默认目标站点
+auth_mode: bot                            # 全局认证切换："bot" | "cookie" | "none"
+
+cookie:                                   # cookie 凭证，所有站点共用
+  cookies: 'SESSDATA=xxx'
 
 sites:                                    # 多站点配置
   mywiki:
     url: https://wiki.example.com         # 站点地址
     api: https://wiki.example.com/api.php # API 地址（可选，自动推导）
-    auth:
-      type: bot                           # 目前仅实现 "bot" 模式
+    bot:
       username: YourBot@YourBot           # Bot 用户名
       password: your-bot-password          # Bot 密码
 
@@ -388,9 +394,33 @@ npx vitest run --coverage
 4. 获取 CSRF 令牌用于编辑操作
 5. CSRF 令牌过期时（badtoken 错误）自动重新认证
 
-### Cookie 处理
+### Cookie 认证
 
-某些 Wiki 农场要求每次 API 请求都携带 `SESSDATA` Cookie（甚至在登录前）。客户端为此生成一个虚拟的 SESSDATA UUID。真实的认证 Cookie 从服务端的 `Set-Cookie` 响应中合并。
+如果 bot 账号因权限不足无法编辑某些页面（例如 `Widget:*` 命名空间），把 `auth_mode` 改为 `cookie`，使用普通用户登录后的 cookies 进行认证。
+
+```yaml
+auth_mode: cookie
+cookie:
+  cookies: 'SESSDATA=xxx'
+```
+
+同一个配置里也可以同时保留 bot 和 cookie 凭证，`auth_mode` 控制实际使用哪一种：
+
+```yaml
+auth_mode: cookie          # 改成 bot 即使用 Bot 密码
+
+cookie:
+  cookies: 'SESSDATA=xxx'
+
+sites:
+  mywiki:
+    url: https://wiki.example.com
+    bot:
+      username: YourBot@YourBot
+      password: your-bot-password
+```
+
+获取方式：在浏览器中登录 Wiki 后，使用 "Get cookies.txt" / "Cookie-Editor" 等扩展复制当前站点的 `SESSDATA` Cookie，粘贴到 `cookie.cookies` 字段即可。MCP 启动时会通过 `action=query&meta=userinfo` 验证 cookies 是否有效，并自动获取用户名用于沙箱页面路径。
 
 ## 错误处理
 

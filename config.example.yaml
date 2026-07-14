@@ -1,17 +1,33 @@
 # MediaWiki MCP Server 配置
-# 复制此文件为 mediawiki-mcp.config.yaml 并填写你的 Wiki 信息
 
+# 默认站点
 default_site: mysite
+
+# 认证方式切换开关："bot" | "cookie" | "none"
+# bot: 使用每个站点单独配置的 bot 用户名/密码
+# cookie: 使用顶层共享的 cookie 凭证
+# none: 只读模式，不登录
+auth_mode: bot
+
+# Cookie 凭证（auth_mode 为 cookie 时使用，所有站点共用）
+cookie:
+  cookies: 'SESSDATA=你的SESSDATA值'
+
 sites:
   mysite:
     url: https://wiki.example.com
     # api: https://wiki.example.com/api.php  # 可选，默认使用 wiki.url/api.php
 
-    auth:
-      # 推荐在 https://www.mediawiki.org/wiki/Special:BotPasswords 创建 Bot 密码
-      type: bot
+    # Bot 凭证（auth_mode 为 bot 时使用，每个站点可不同）
+    bot:
       username: YourBot@YourBot
       password: your-bot-password
+
+  another:
+    url: https://another.wiki.com
+    bot:
+      username: AnotherBot@AnotherBot
+      password: another-bot-password
 
 validation:
   screenshot: true          # 浏览器验证时是否截图
@@ -21,17 +37,12 @@ validation:
   wait_after_load: 3000     # 页面加载后等待 JS 执行的毫秒数
 
   # 控制台日志噪音过滤（正则表达式）
-  # 每个 Wiki 站点都有自己的平台插件/小工具/统计脚本，
-  # 它们输出的日志是正常噪音，不表示页面有错误。
-  # 把无关节目的特征文本写进来，验证报告会更干净。
   console_ignore:
     - "^Widget:.*版载入$"          # 小工具加载日志（示例）
     - "Material Symbols"           # 图标库加载（示例）
     - "^页面浏览量"                 # PV 统计（示例）
-  # ↑ 以上只是示例，请根据你站点的实际控制台输出来调整
 
   # 自定义检测规则，用于 Wiki 特定的错误模式
-  # 规则会针对渲染后的 HTML 进行检查
   custom_rules:
     - name: my-custom-error
       selector: .my-error-class

@@ -3,16 +3,18 @@ import type { AppConfig, SiteConfig } from '../src/types.js';
 
 /**
  * 新版多站点 AppConfig 的默认值，供测试使用。
- * 与旧版不同，不再有顶层 wiki/auth，改为 default_site + sites 映射。
+ * 顶层 auth_mode 控制认证方式，cookie 凭证全局共享，
+ * 每个站点单独配置 bot 凭据。
  */
 export function makeDefaultConfig(overrides: Partial<AppConfig> = {}): AppConfig {
   return {
     default_site: 'test',
+    auth_mode: 'bot',
     sites: {
       test: {
         url: 'https://wiki.example.com',
         api: 'https://wiki.example.com/api.php',
-        auth: { type: 'bot', username: 'TestBot@bwiki', password: 'secret' },
+        bot: { username: 'TestBot@bwiki', password: 'secret' },
       },
     },
     validation: {
@@ -41,7 +43,7 @@ export function makeDefaultConfig(overrides: Partial<AppConfig> = {}): AppConfig
       test: {
         url: 'https://wiki.example.com',
         api: 'https://wiki.example.com/api.php',
-        auth: { type: 'bot', username: 'TestBot@bwiki', password: 'secret' },
+        bot: { username: 'TestBot@bwiki', password: 'secret' },
         ...(overrides.sites?.test ?? {}),
       },
     },
@@ -116,6 +118,12 @@ export function makeMockWikiClient(overrides: Record<string, any> = {}) {
     deletePage: vi.fn().mockResolvedValue({ success: true, message: '页面已删除。' }),
     undeletePage: vi.fn().mockResolvedValue({ success: true, message: '页面已恢复。' }),
     ensureAuthenticated: vi.fn().mockResolvedValue(undefined),
+    authManager: {
+      username: 'TestBot',
+      csrf: 'test-csrf-token',
+      cookieHeader: 'test=cookie',
+      isAuthenticated: true,
+    },
     ...overrides,
   };
 }

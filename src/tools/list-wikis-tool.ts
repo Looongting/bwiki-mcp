@@ -16,6 +16,7 @@ export async function listWikis(deps: ToolDependencies, args: { check?: boolean 
   const manager = deps.wikiClientManager;
   const defaultSite = manager.defaultSite;
   const siteKeys = manager.allSites;
+  const authMode = deps.config.auth_mode;
 
   const results: WikiStatus[] = [];
 
@@ -25,7 +26,7 @@ export async function listWikis(deps: ToolDependencies, args: { check?: boolean 
       key,
       url: config.url,
       api: config.api,
-      auth_type: config.auth.type,
+      auth_type: authMode,
       is_default: key === defaultSite,
       status: 'unknown',
     };

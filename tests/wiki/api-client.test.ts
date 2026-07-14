@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { SiteConfig } from '../../src/types.js';
+import type { AuthConfig, SiteConfig } from '../../src/types.js';
 
 // 在模块级别定义 mock，以便 vi.mock factory 可以访问
 const mockAuth = {
@@ -8,6 +8,7 @@ const mockAuth = {
   cookieHeader: 'test=cookie',
   csrf: 'test-csrf-token',
   refreshCsrfToken: vi.fn().mockResolvedValue(undefined),
+  username: 'TestBot',
 };
 
 const mockFetchResponse = (data: any) => ({
@@ -29,15 +30,16 @@ describe('WikiClient', () => {
   const mockConfig: SiteConfig = {
     url: 'https://wiki.example.com',
     api: 'https://wiki.example.com/api.php',
-    auth: { type: 'bot', username: 'TestBot', password: 'testpass' },
+    bot: { username: 'TestBot', password: 'testpass' },
   };
+  const mockAuthConfig: AuthConfig = { type: 'bot', username: 'TestBot', password: 'testpass' };
 
   let client: WikiClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.isAuthenticated = false;
-    client = new WikiClient(mockConfig);
+    client = new WikiClient(mockConfig, mockAuthConfig);
   });
 
   describe('readPage', () => {

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import type { SiteConfig } from '../types.js';
+import type { AuthConfig } from '../types.js';
 import { AuthError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 import { fetchWithRetry } from '../utils/network.js';
@@ -14,9 +14,11 @@ export class AuthManager {
   private cookies: string[] = [];
   private csrfToken: string | null = null;
   private _isAuthenticated = false;
+  private _username: string | null = null;
 
   constructor(
-    private readonly config: SiteConfig
+    private readonly apiUrl: string,
+    private readonly auth: AuthConfig
   ) {}
 
   get isAuthenticated(): boolean {
@@ -29,6 +31,11 @@ export class AuthManager {
 
   get cookieHeader(): string {
     return this.cookies.join('; ');
+  }
+
+  /** Resolved username from userinfo (cookie auth) or bot username. */
+  get username(): string | null {
+    return this._username;
   }
 
   /** Extract just `name=value` from a raw Set-Cookie string, stripping attributes. */
@@ -65,20 +72,23 @@ export class AuthManager {
     }
   }
 
+  /** Parse a raw cookie header string into `name=value` pairs. */
+  private static parseCookieHeader(header: string): string[] {
+    return header
+      .split(';')
+      .map(c => c.trim())
+      .filter(c => c.length > 0 && c.includes('='));
+  }
+
   async authenticate(): Promise<void> {
-    // Step 0: set fake SESSDATA + session cookies before any request
-    this.setFakeCookies();
-
-    const { auth } = this.config;
-
-    switch (auth.type) {
+    switch (this.auth.type) {
       case 'bot':
-        await this.loginWithBotPassword(auth.username, auth.password);
+        this.setFakeCookies();
+        await this.loginWithBotPassword(this.auth.username, this.auth.password);
         break;
-      case 'oauth':
-        throw new AuthError('OAuth not yet implemented');
       case 'cookie':
-        throw new AuthError('Cookie auth not yet implemented');
+        await this.loginWithCookie(this.auth.cookies);
+        break;
       case 'none':
         this._isAuthenticated = true;
         logger.info('Using fake session (read-only mode, no login)');
@@ -90,9 +100,40 @@ export class AuthManager {
     logger.info('Authenticated with MediaWiki');
   }
 
+  private async loginWithCookie(cookies: string): Promise<void> {
+    if (!cookies.trim()) {
+      throw new AuthError('Cookie auth requires non-empty cookies');
+    }
+
+    this.cookies = AuthManager.parseCookieHeader(cookies);
+
+    // Verify cookies by calling userinfo and extract the real username
+    const userInfoUrl = `${this.apiUrl}?action=query&meta=userinfo&uiprop=name&format=json`;
+    const userInfoResp = await fetchWithRetry(userInfoUrl, {
+      method: 'GET',
+      headers: { Cookie: this.cookieHeader },
+    });
+    const userInfoData = await userInfoResp.json() as any;
+
+    if (userInfoData?.error) {
+      throw new AuthError(`Cookie validation failed: ${userInfoData.error.info || userInfoData.error.code}`);
+    }
+
+    const userName = userInfoData?.query?.userinfo?.name;
+    if (!userName) {
+      throw new AuthError('Cookie validation failed: could not retrieve userinfo');
+    }
+
+    this._username = userName;
+    logger.info(`Cookie auth validated for user ${userName}`);
+
+    // Merge any Set-Cookie headers from the validation response
+    this.mergeCookies(userInfoResp.headers.getSetCookie?.() || []);
+  }
+
   private async loginWithBotPassword(username: string, password: string): Promise<void> {
     // Step 1: Get login token with fake SESSDATA + session cookies
-    const tokenUrl = `${this.config.api}?action=query&meta=tokens&type=login&format=json`;
+    const tokenUrl = `${this.apiUrl}?action=query&meta=tokens&type=login&format=json`;
     const tokenResp = await fetchWithRetry(tokenUrl, {
       method: 'GET',
       headers: { Cookie: this.cookieHeader },
@@ -105,7 +146,7 @@ export class AuthManager {
     this.mergeCookies(tokenResp.headers.getSetCookie?.() || []);
 
     // Step 2: Login with our cookies (including fake SESSDATA)
-    const loginResp = await fetchWithRetry(`${this.config.api}?action=login&format=json`, {
+    const loginResp = await fetchWithRetry(`${this.apiUrl}?action=login&format=json`, {
       body: new URLSearchParams({ lgname: username, lgpassword: password, lgtoken: loginToken }),
       headers: { Cookie: this.cookieHeader },
     });
@@ -118,11 +159,12 @@ export class AuthManager {
       throw new AuthError(`Login failed: ${loginResult?.login?.reason || loginResult?.login?.result || 'Unknown reason'}`);
     }
 
+    this._username = username;
     logger.info(`Logged in as ${username}`);
   }
 
   private async fetchCsrfToken(): Promise<void> {
-    const resp = await fetchWithRetry(`${this.config.api}?action=query&meta=tokens&format=json`, {
+    const resp = await fetchWithRetry(`${this.apiUrl}?action=query&meta=tokens&format=json`, {
       method: 'GET',
       headers: { Cookie: this.cookieHeader },
     });
@@ -141,6 +183,7 @@ export class AuthManager {
     this._isAuthenticated = false;
     this.csrfToken = null;
     this.cookies = [];
+    this._username = null;
     logger.info('Session expired, performing full re-authentication...');
     await this.authenticate();
   }

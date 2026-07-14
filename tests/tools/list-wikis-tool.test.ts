@@ -11,17 +11,18 @@ import { fetchWithRetry } from '../../src/utils/network.js';
 function makeDeps(overrides: {
   sites?: Record<string, any>;
   defaultSite?: string;
+  authMode?: string;
 } = {}) {
   const sites = overrides.sites ?? {
     wiki1: {
       url: 'https://wiki1.example.com',
       api: 'https://wiki1.example.com/api.php',
-      auth: { type: 'bot' as const, username: 'Bot1', password: 'p1' },
+      bot: { username: 'Bot1', password: 'p1' },
     },
     wiki2: {
       url: 'https://wiki2.example.com',
       api: 'https://wiki2.example.com/api.php',
-      auth: { type: 'bot' as const, username: 'Bot2', password: 'p2' },
+      bot: { username: 'Bot2', password: 'p2' },
     },
   };
 
@@ -39,7 +40,7 @@ function makeDeps(overrides: {
       allSites: siteKeys,
     },
     browserManager: {} as any,
-    config: {} as any,
+    config: { auth_mode: overrides.authMode ?? 'bot' } as any,
   };
 }
 
@@ -104,7 +105,7 @@ describe('wiki_list_wikis 工具', () => {
         badwiki: {
           url: 'https://bad.example.com',
           api: 'https://bad.example.com/api.php',
-          auth: { type: 'bot', username: 'B', password: 'p' },
+          bot: { username: 'B', password: 'p' },
         },
       },
     });
@@ -124,7 +125,7 @@ describe('wiki_list_wikis 工具', () => {
         weird: {
           url: 'https://weird.example.com',
           api: 'https://weird.example.com/api.php',
-          auth: { type: 'bot', username: 'W', password: 'p' },
+          bot: { username: 'W', password: 'p' },
         },
       },
     });
@@ -146,12 +147,12 @@ describe('wiki_list_wikis 工具', () => {
         primary: {
           url: 'https://primary.example.com',
           api: 'https://primary.example.com/api.php',
-          auth: { type: 'bot', username: 'P', password: 'p' },
+          bot: { username: 'P', password: 'p' },
         },
         secondary: {
           url: 'https://secondary.example.com',
           api: 'https://secondary.example.com/api.php',
-          auth: { type: 'bot', username: 'S', password: 'p' },
+          bot: { username: 'S', password: 'p' },
         },
       },
       defaultSite: 'primary',
@@ -183,7 +184,7 @@ describe('wiki_list_wikis 工具', () => {
         solo: {
           url: 'https://solo.example.com',
           api: 'https://solo.example.com/api.php',
-          auth: { type: 'bot', username: 'Sol', password: 'p' },
+          bot: { username: 'Sol', password: 'p' },
         },
       },
     });
@@ -194,27 +195,22 @@ describe('wiki_list_wikis 工具', () => {
     expect(result.content[0].text).toContain('共 1 个站点');
   });
 
-  it('返回 auth_type 信息', async () => {
+  it('返回全局 auth_mode 信息', async () => {
     const deps = makeDeps({
       sites: {
         botwiki: {
           url: 'https://bot.example.com',
           api: 'https://bot.example.com/api.php',
-          auth: { type: 'bot', username: 'B', password: 'p' },
-        },
-        nonewiki: {
-          url: 'https://none.example.com',
-          api: 'https://none.example.com/api.php',
-          auth: { type: 'none' },
+          bot: { username: 'B', password: 'p' },
         },
       },
+      authMode: 'cookie',
     });
 
     const result = await listWikis(deps, { check: false });
 
     const text = result.content[0].text;
-    expect(text).toContain('认证方式: bot');
-    expect(text).toContain('认证方式: none');
+    expect(text).toContain('认证方式: cookie');
   });
 
   it('连通性汇总统计应准确', async () => {
@@ -223,17 +219,17 @@ describe('wiki_list_wikis 工具', () => {
         online1: {
           url: 'https://o1.example.com',
           api: 'https://o1.example.com/api.php',
-          auth: { type: 'bot', username: 'O1', password: 'p' },
+          bot: { username: 'O1', password: 'p' },
         },
         online2: {
           url: 'https://o2.example.com',
           api: 'https://o2.example.com/api.php',
-          auth: { type: 'bot', username: 'O2', password: 'p' },
+          bot: { username: 'O2', password: 'p' },
         },
         offline1: {
           url: 'https://f1.example.com',
           api: 'https://f1.example.com/api.php',
-          auth: { type: 'bot', username: 'F1', password: 'p' },
+          bot: { username: 'F1', password: 'p' },
         },
       },
     });

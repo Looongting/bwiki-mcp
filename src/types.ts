@@ -8,12 +8,22 @@ export interface WikiConfig {
 
 export type AuthConfig =
   | { type: 'bot'; username: string; password: string }
-  | { type: 'oauth'; consumer_key: string; consumer_secret: string; access_token: string; access_secret: string }
-  | { type: 'cookie'; cookie_file: string }
+  | { type: 'cookie'; cookies: string }
   | { type: 'none' };
 
+export interface BotCredentials {
+  username: string;
+  password: string;
+}
+
+export interface CookieCredentials {
+  cookies: string;
+}
+
+export type AuthMode = 'bot' | 'cookie' | 'none';
+
 export interface SiteConfig extends WikiConfig {
-  auth: AuthConfig;
+  bot?: BotCredentials;
 }
 
 export interface ValidationConfig {
@@ -49,6 +59,8 @@ export interface BrowserConfig {
 
 export interface AppConfig {
   default_site: string;
+  auth_mode: AuthMode;
+  cookie?: CookieCredentials;
   sites: Record<string, SiteConfig>;
   validation: ValidationConfig;
   safety: SafetyConfig;

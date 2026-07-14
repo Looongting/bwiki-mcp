@@ -42,11 +42,11 @@ describe('配置加载', () => {
     // 模拟 returnValue 覆盖 mockResolvedValue
     vi.mocked(readFile).mockResolvedValue(`
 default_site: mysite
+auth_mode: bot
 sites:
   mysite:
     url: https://wiki.example.com
-    auth:
-      type: bot
+    bot:
       username: TestBot
       password: testpass
 `);
@@ -55,20 +55,21 @@ sites:
     const config = await loadConfig();
 
     expect(config.default_site).toBe('mysite');
+    expect(config.auth_mode).toBe('bot');
     expect(config.sites.mysite.url).toBe('https://wiki.example.com');
     expect(config.sites.mysite.api).toBe('https://wiki.example.com/api.php');
-    expect(config.sites.mysite.auth.type).toBe('bot');
+    expect(config.sites.mysite.bot?.username).toBe('TestBot');
     expect(config.validation.screenshot).toBe(true);
   });
 
   it('应从 Wiki URL 自动推导 api.php', async () => {
     vi.mocked(readFile).mockResolvedValue(`
 default_site: mywiki
+auth_mode: bot
 sites:
   mywiki:
     url: https://wiki.example.com
-    auth:
-      type: bot
+    bot:
       username: TestBot
       password: testpass
 `);
@@ -79,15 +80,15 @@ sites:
     expect(config.sites.mywiki.api).toBe('https://wiki.example.com/api.php');
   });
 
-  it('应尊重显式设置的 MW_API（api 字段）', async () => {
+  it('应尊重显式设置的 api 字段', async () => {
     vi.mocked(readFile).mockResolvedValue(`
 default_site: mywiki
+auth_mode: bot
 sites:
   mywiki:
     url: https://wiki.example.com
     api: https://wiki.example.com/w/api.php
-    auth:
-      type: bot
+    bot:
       username: TestBot
       password: testpass
 `);
@@ -96,5 +97,55 @@ sites:
     const config = await loadConfig();
 
     expect(config.sites.mywiki.api).toBe('https://wiki.example.com/w/api.php');
+  });
+
+  it('应支持顶层 cookie 配置', async () => {
+    vi.mocked(readFile).mockResolvedValue(`
+default_site: mysite
+auth_mode: cookie
+sites:
+  mysite:
+    url: https://wiki.example.com
+    bot:
+      username: TestBot
+      password: testpass
+cookie:
+  cookies: 'SESSDATA=abc'
+`);
+
+    const { loadConfig } = await import('../src/config.js');
+    const config = await loadConfig();
+
+    expect(config.auth_mode).toBe('cookie');
+    expect(config.cookie?.cookies).toBe('SESSDATA=abc');
+  });
+
+  it('cookie 模式缺少顶层 cookie 配置时应抛出 ConfigError', async () => {
+    vi.mocked(readFile).mockResolvedValue(`
+default_site: mysite
+auth_mode: cookie
+sites:
+  mysite:
+    url: https://wiki.example.com
+    bot:
+      username: TestBot
+      password: testpass
+`);
+
+    const { loadConfig } = await import('../src/config.js');
+    await expect(loadConfig()).rejects.toThrow(/top-level "cookie" credentials are missing/);
+  });
+
+  it('bot 模式站点缺少 bot 凭据时应抛出 ConfigError', async () => {
+    vi.mocked(readFile).mockResolvedValue(`
+default_site: mysite
+auth_mode: bot
+sites:
+  mysite:
+    url: https://wiki.example.com
+`);
+
+    const { loadConfig } = await import('../src/config.js');
+    await expect(loadConfig()).rejects.toThrow(/missing bot credentials/);
   });
 });

@@ -49,11 +49,15 @@ export async function runWizard(): Promise<void> {
   const siteName = url.replace(/https?:\/\//, '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'my-wiki';
   const config: Record<string, any> = {
     default_site: siteName,
+    auth_mode: 'bot',
     sites: {
       [siteName]: {
         url,
-        auth: { type: 'bot', username, password },
+        bot: { username, password },
       },
+    },
+    cookie: {
+      cookies: '',
     },
     validation: {
       screenshot,

@@ -23,6 +23,9 @@ export async function autofix(deps: ToolDependencies, args: AutofixInput) {
   const maxIterations = args.max_iterations ?? 5;
   const useBrowser = args.enable_browser !== false && config.validation.console_errors;
 
+  // Ensure authenticated before resolving sandbox page, so that the real username is available.
+  await wikiClient.ensureAuthenticated();
+
   if (iteration > maxIterations) {
     return {
       content: [{
@@ -34,7 +37,7 @@ export async function autofix(deps: ToolDependencies, args: AutofixInput) {
   }
 
   // Resolve sandbox page
-  const username = siteConfig.auth.type === 'bot' ? siteConfig.auth.username : 'user';
+  const username = wikiClient.authManager?.username ?? 'user';
   const sandbox = new SandboxManager(config.safety.sandbox_page, username.replace(/@.*$/, ''));
   const sandboxPage = sandbox.getSandboxPage(args.page);
 

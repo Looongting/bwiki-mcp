@@ -28,7 +28,7 @@ async function main() {
     console.log(`📍 站点: ${name}`);
     console.log(`   URL: ${siteConfig.url}`);
     console.log(`   API: ${siteConfig.api}`);
-    console.log(`   认证: ${siteConfig.auth.type}`);
+    console.log(`   认证: ${config.auth_mode}`);
 
     // 第二步：测试 API 连通性
     console.log('\n2️⃣  测试 API 连通性...');

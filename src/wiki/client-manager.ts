@@ -1,4 +1,4 @@
-import type { AppConfig, SiteConfig } from '../types.js';
+import type { AppConfig, AuthConfig, SiteConfig } from '../types.js';
 import { WikiClient } from './api-client.js';
 import { ConfigError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
@@ -34,12 +34,30 @@ export class WikiClientManager {
     return siteConfig;
   }
 
+  private resolveAuth(siteConfig: SiteConfig): AuthConfig {
+    switch (this.config.auth_mode) {
+      case 'bot':
+        if (!siteConfig.bot) {
+          throw new ConfigError(`auth_mode is "bot" but site is missing bot credentials`);
+        }
+        return { type: 'bot', username: siteConfig.bot.username, password: siteConfig.bot.password };
+      case 'cookie':
+        if (!this.config.cookie) {
+          throw new ConfigError(`auth_mode is "cookie" but top-level cookie credentials are missing`);
+        }
+        return { type: 'cookie', cookies: this.config.cookie.cookies };
+      case 'none':
+        return { type: 'none' };
+    }
+  }
+
   getClient(site?: string): WikiClient {
     const name = site || this.config.default_site;
     let client = this.clients.get(name);
     if (!client) {
       const siteConfig = this.getSiteConfig(name);
-      client = new WikiClient(siteConfig);
+      const auth = this.resolveAuth(siteConfig);
+      client = new WikiClient(siteConfig, auth);
       this.clients.set(name, client);
       logger.info(`Created WikiClient for site "${name}" (${siteConfig.url})`);
     }

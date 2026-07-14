@@ -33,7 +33,9 @@ export async function edit(deps: ToolDependencies, args: {
 }) {
   const { wikiClientManager, config } = deps;
   const wikiClient = wikiClientManager.getClient(args.site);
-  const siteConfig = wikiClientManager.getSiteConfig(args.site);
+
+  // Ensure authenticated before resolving sandbox page, so that the real username is available.
+  await wikiClient.ensureAuthenticated();
 
   // ─── Corruption detection ───────────────────────────────────
   checkCorrupted(args.content, 'content');
@@ -66,7 +68,7 @@ export async function edit(deps: ToolDependencies, args: {
     let readPage = args.page;
     const shouldSandbox = args.sandbox ?? config.safety.sandbox_first;
     if (shouldSandbox) {
-      const username = siteConfig.auth.type === 'bot' ? siteConfig.auth.username : 'user';
+      const username = wikiClient.authManager?.username ?? 'user';
       const sandbox = new SandboxManager(config.safety.sandbox_page, username.replace(/@.*$/, ''));
       readPage = sandbox.getSandboxPage(args.page);
     }
@@ -129,7 +131,7 @@ export async function edit(deps: ToolDependencies, args: {
   const shouldSandbox = args.sandbox ?? config.safety.sandbox_first;
 
   if (shouldSandbox) {
-    const username = siteConfig.auth.type === 'bot' ? siteConfig.auth.username : 'user';
+    const username = wikiClient.authManager?.username ?? 'user';
     const sandbox = new SandboxManager(config.safety.sandbox_page, username.replace(/@.*$/, ''));
     targetPage = sandbox.getSandboxPage(args.page);
   }
